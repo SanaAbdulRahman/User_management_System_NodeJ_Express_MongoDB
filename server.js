@@ -3,8 +3,7 @@ const mongoose=require('mongoose');
 const {body,validationResult}=require('express-validator');
 const app=express();
 const path=require('path');
-
-
+const bcrypt=require('bcryptjs');
 
 const port=8080 || process.env.PORT;
 
@@ -34,6 +33,13 @@ app.use(express.static(path.join(__dirname,'public')));
 app.get('/',(req,res)=>{
     res.render('register');
 })
+app.get('/login',(req,res)=>{
+    res.render('login')
+})
+
+app.get('/logout',(req,res)=>{
+    res.redirect('/login');
+})
 
 app.post('/home',[
     body('userName').trim().notEmpty().withMessage('Username is required'),
@@ -56,7 +62,8 @@ async (req, res) => {
         return res.render('register', { errors: [{ msg: 'Email already exists' }] });
       }
 
-      const user = new User({ userName, email, password });
+      const hashedPassword=await bcrypt.hash(password,10);
+      const user = new User({ userName, email, password: hashedPassword });
       await user.save();
 
       res.render('home',{userName});
@@ -66,6 +73,8 @@ async (req, res) => {
     }
   }
 );
+
+
 app.listen(port, ()=>{
     console.log(`Server is running on port : ${port}`);
 })
